@@ -1,6 +1,7 @@
 
 from pytubefix import YouTube
 from pydub import AudioSegment
+import os
 
 class DownloadMP3:
     def __init__(self,url , raw_extension = "m4a", des_extension = "mp3", start_seconds = "0:0", end_seconds   = "0:0"):
@@ -36,8 +37,8 @@ class DownloadMP3:
             end_ms = self._time_to_ms(self.end_seconds) if self.end_seconds != "0:0" else raw_file.__len__()
 
             trimmed_audio=raw_file[start_ms:end_ms]
-            
-            new_path = self.m4a_path.replace(self.raw_extension,self.des_extension)
+            os.makedirs(self.des_extension+"_files",exist_ok=True)
+            new_path = self.m4a_path.replace(self.raw_extension,self.des_extension).replace("'","")
             mp3_path = trimmed_audio.export(new_path,format=self.des_extension)
             print("Converted to file",mp3_path.name)
 
@@ -47,9 +48,9 @@ class DownloadMP3:
 
 if __name__ == "__main__":
     download_file = DownloadMP3(
-        url="https://www.youtube.com/watch?v=D164TFHeOcI",
-        start_time="1:0",
-        end_time="2:0"
+        url="https://www.youtube.com/watch?v=8PK6S0-fSsQ",
+        start_seconds="0:0",
+        end_seconds="3:49"
     )
     download_file.download_audio_file()
     download_file.convert_to_mp3_file()
