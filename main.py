@@ -10,7 +10,12 @@ class DownloadMP3:
         self.start_seconds = start_seconds
         self.end_seconds   = end_seconds
         self.m4a_path      = None
-        
+    
+    def _time_to_ms(self, time_str):
+            """Convert mm:ss to milliseconds."""
+            minutes, seconds = map(int, time_str.split(":"))
+            return (minutes * 60 + seconds) * 1000
+
     def download_audio_file(self):
         yt = YouTube(self.url)
         stream = yt.streams.filter(only_audio=True).first()
@@ -21,29 +26,31 @@ class DownloadMP3:
             self.m4a_path = m4a_path
         except Exception as e:
             print(e)
-            self.m4p_path = None
+            self.m4a_path = None
 
     def convert_to_mp3_file(self):
         try:
             raw_file = AudioSegment.from_file(self.m4a_path,format=self.raw_extension)
 
-            self.start_seconds = int(self.start_seconds.split(':')[0])*60*1000 + int(self.start_seconds.split(':')[1])
-            if self.end_seconds == "0:0":
-                self.end_seconds = raw_file.__len__()
-            else:
-                self.end_seconds = int(self.end_seconds.split(':')[0])*60*1000 + int(self.end_seconds.split(':')[1])
-            raw_file=raw_file[self.start_seconds:self.end_seconds]
+            start_ms = self._time_to_ms(self.start_seconds)
+            end_ms = self._time_to_ms(self.end_seconds) if self.end_seconds != "0:0" else raw_file.__len__()
+
+            trimmed_audio=raw_file[start_ms:end_ms]
             
             new_path = self.m4a_path.replace(self.raw_extension,self.des_extension)
-            mp3_path = raw_file.export(new_path,format=self.des_extension)
+            mp3_path = trimmed_audio.export(new_path,format=self.des_extension)
             print("Converted to file",mp3_path.name)
-            mp3_path = AudioSegment.from_mp3(mp3_path)[self.start_seconds:self.end_seconds]
+
         except Exception as e:
             print(e)
             return None
 
 if __name__ == "__main__":
-    download_file = DownloadMP3("https://www.youtube.com/watch?v=D164TFHeOcI",start_seconds="1:0",end_seconds="2:0")
+    download_file = DownloadMP3(
+        url="https://www.youtube.com/watch?v=D164TFHeOcI",
+        start_time="1:0",
+        end_time="2:0"
+    )
     download_file.download_audio_file()
     download_file.convert_to_mp3_file()
 
